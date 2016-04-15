@@ -1,7 +1,7 @@
 ---
 title: "Predictive Analysis of Machine Learning"
-author: "Sam"
-date: "April 14, 2016"
+author: "sammyccs"
+date: "April 10, 2016"
 output: html_document
 ---
 
@@ -14,7 +14,7 @@ test_data <- read.csv('pml-testing.csv', stringsAsFactors=F, sep=',', header=T, 
 ```
 
 #Cleaning data
-#1) cleaning training data
+#1) Cleaning training data
 ```{r}
 Missing_values <- sapply(train_data, function (x) any(is.na(x) | x == ""));
 #defining the missing values in training data
@@ -41,8 +41,8 @@ table(train_data_candidate$classe)
 ```
 
 ```{r}
-suppressMessages(library(caret)); 
-suppressMessages(library(data.table));  
+library(caret); 
+library(data.table);  
 
 nzv <- nearZeroVar(train_data_candidate,saveMetrics=TRUE); 
 train_data_candidate<-train_data_candidate[,-which(nzv$nzv==T)]; 
@@ -58,11 +58,11 @@ train_data_candidate[,-1]<-predict(prepro, train_data_candidate[,-1]);
 
 ```{r}
 #verifying the variable correlation in prior to applying models
-suppressMessages(library(corrplot)); 
-corrplot(cor(train_data_candidate[,-1][,-length(names(test_data))]),method="color",main="variable correlation in train data"); 
+#library(corrplot); 
+#corrplot(cor(train_data_candidate[,-1][,-length(names(test_data))]),method="color",main="variable correlation in train data"); 
 ```
 
-#2) cleaning testing data through the same processes
+#2) Cleaning testing data through the same processes
 ```{r}
 Missing_values <- sapply(test_data, function (x) any(is.na(x) | x == "")); 
 Predictor <- !Missing_values & grepl("belt|[^(fore)]arm|dumbbell|forearm", names(Missing_values)); 
@@ -110,16 +110,16 @@ dim(test_probe);
 #Training random forest model with 5 fold cross validation 
 ```{r}
 fitrf <- train(classe ~ ., data=train, method="rf", trControl=trainControl(method="cv", 5), ntree=250); 
-print(fitrf); 
+
 #The estimated accuracy is 98.86%
 ```
 
 ```{r}
-plot(fitrf$finalModel,col=c(1:6),lwd=3,main="Accuracies vs No. of trees"); 
-legend("topright",inset=.05,title="classe",legend=colnames(fitrf$finalModel$err.rate),fill=c(1:6),horiz=F,cex=.8); 
+#plot(fitrf$finalModel,col=c(1:6),lwd=3,main="Accuracies vs No. of trees"); 
+#legend("topright",inset=.05,title="classe",legend=colnames(fitrf$finalModel$err.rate),fill=c(1:6),horiz=F,cex=.8); 
 ```
 
-#identifying the important variables
+#Identifying the important variables
 ```{r}
 varImp(fitrf); 
 # showing only top 20 most important variables (out of 52)
@@ -128,17 +128,11 @@ varImp(fitrf);
 #Evaluating the test_probe data 
 ```{r}
 predrf <- predict(fitrf,test_probe); 
-confusionMatrix(test_probe$classe, predrf); 
 cmrf <- confusionMatrix(test_probe$classe, predrf); 
 
 accuracy <- postResample(predrf, test_probe$classe); 
 print(accuracy); 
 #The estimated accuracy is 99.2% in test_probe data set
-```
-
-```{r}
-qplot(classe,predrf,data=test_probe,col=classe, main="relationship of model predicted and classe in train_probe"); 
-#the relationship of model predicted and classes in test_probe dataset
 ```
 
 #Prediction of the cleaned test_data data set by applying the trained fitrf model generated above
@@ -153,14 +147,14 @@ fittree<- train(classe ~ ., method="rpart", data=train);
 #training the tree model
 predtree <- predict(fittree,test_probe); 
 #evaluating the trained tree model by test_probe data set
-confusionMatrix(test_probe$classe,predtree); 
+
 cmtree <- confusionMatrix(test_probe$classe,predtree); 
 # the estimated accuracy of trained trine model is 49.46% which is a lot worse than the trained random forest model
 ```
 
 ```{r}
-suppressMessages(library(rattle)); 
-fancyRpartPlot(fittree$finalModel); 
+#library(rattle); 
+#fancyRpartPlot(fittree$finalModel); 
 #plotting predictive result by tree  
 ```
 
@@ -171,12 +165,12 @@ table(predrf, predtree);
 
 #Sensitivities & Specificities of predicted models (random forest vs tree) 
 ```{r} 
-par(mfrow=c(1,2)); 
-plot(cmrf$byClass, main="random forest", xlim=c(0.97, 1.005),pch=19,col="red"); 
-text(cmrf$byClass[,1]+0.005, cmrf$byClass[,2], labels=LETTERS[1:5], cex= 0.7); 
+#par(mfrow=c(1,2)); 
+#plot(cmrf$byClass, main="random forest", xlim=c(0.97, 1.005),pch=19,col="red"); 
+#text(cmrf$byClass[,1]+0.005, cmrf$byClass[,2], labels=LETTERS[1:5], cex= 0.7); 
 
-plot(cmtree$byClass, main="tree", xlim=c(0.3, 1.005), ylim=c(0.01,1),pch=19,col="blue"); 
-text(cmtree$byClass[,1]+0.05, cmtree$byClass[,2], labels=LETTERS[1:5], cex= 0.7)
+#plot(cmtree$byClass, main="tree", xlim=c(0.3, 1.005), ylim=c(0.01,1),pch=19,col="blue"); 
+#text(cmtree$byClass[,1]+0.05, cmtree$byClass[,2], labels=LETTERS[1:5], cex= 0.7); 
 ```
 
 # There are many inconsistent predictions between these two models in the classes of A to E as shown above.

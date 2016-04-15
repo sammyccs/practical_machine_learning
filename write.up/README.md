@@ -1,2 +1,0 @@
-# practical_machine_learning
-predictive analysis
